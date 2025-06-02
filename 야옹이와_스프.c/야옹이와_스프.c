@@ -13,6 +13,7 @@ void interaction(char name[], int* level);//상호작용
 void room(int cat,int previous);//방그리기
 void moveCat(char name[], int* cat, int level);//이동
 void action(char name[], int cat, int* soup);//행동
+void badMood(char name[], int level, int* mood);//2-2 기분 나빠짐
 
 int towerPos = -1, scratcherPos = -1; //2-1 방그리기 현재 위치 미정
 
@@ -47,6 +48,7 @@ int main(void) {
 	room(cat, previous);
 
 	while (1) {
+		badMood(name, level, &mood);
 		interaction(name, &level);
 		previous = cat;
 		moveCat(name, &cat, level);
@@ -232,4 +234,30 @@ void FurniturePosition() {//2-1 방그리기 위치 무작위 설정
 	do {
 		scratcherPos = rand() % (ROOM_WIDTH - 2) + 1;
 	} while (scratcherPos == HME_POS || scratcherPos == BWL_POS || scratcherPos == towerPos);
+}
+
+void badMood(char name[],int level, int *mood){//2-2 기분 나빠짐
+	printf("아무 이유 없이 기분이 나빠집니다. 고양이니까?\n");
+
+	int limit = 6 - level;
+	printf("6 - %d : 주사위 눈이 %d 이하이면 그냥 기분이 나빠집니다.\n",level,limit);
+
+	int dice = rand() % 6 + 1;
+	printf("주사위를 굴립니다. 또르륵...\n");
+	printf("%d이(가) 나왔습니다!\n", dice);
+
+	if (dice <= limit) {
+		if (*mood > 0) {
+			printf("%s의 기분이 나빠집니다: %d -> %d\n", name, *mood, *mood - 1);
+			(*mood)--;
+		}
+		else {
+			printf("이미 기분이 최저입니다.\n");
+		}
+	}
+	else {
+		printf("기분은 그대로입니다.\n");
+	}
+
+	Sleep(1000);
 }
