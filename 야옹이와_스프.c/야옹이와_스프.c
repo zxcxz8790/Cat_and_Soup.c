@@ -11,7 +11,7 @@
 void printStatus(int soupCount, int level, int cp, char name[], int mood);//상태출력
 void interaction(char name[], int* level);//상호작용
 void room(int cat,int previous);//방그리기
-void moveCat(char name[], int* cat, int level);//이동
+void moveCat(char name[], int* cat, int mood);//2-3 이동v2
 void action(char name[], int cat, int* soup);//행동
 void badMood(char name[], int level, int* mood);//2-2 기분 나빠짐
 
@@ -51,7 +51,8 @@ int main(void) {
 		badMood(name, level, &mood);
 		interaction(name, &level);
 		previous = cat;
-		moveCat(name, &cat, level);
+		moveCat(name, &cat, mood);
+		if (mood == 1 && towerPos == -1 && scratcherPos == -1) mood = 0;
 		room(cat, previous);
 		action(name, cat, &soup);
 
@@ -86,7 +87,7 @@ void printStatus(int soupCount, int level, int cp, char name[], int mood) {//2-1
 	printf("%s 의 기분 (0~3) : %d\n", name, mood);
 	printf("\t%s\n",moodMessages[mood]);
 	printf("집사와의 관계(0~4): %d\n", level);
-	printf("%s\n", levelMessages[level]);
+	printf("\t%s\n", levelMessages[level]);
 	printf("=========================================\n");
 	
 	Sleep(500);
@@ -172,35 +173,70 @@ void room(int cat, int previous) {
 	Sleep(500);
 }
 
-void moveCat(char name[], int* cat, int level) {
-	int dice = rand() % 6 + 1;
-
-	printf("\n%s 이동: 집사와 친밀할수록 냄비 쪽으로 갈 확률이 높아집니다.\n", name);
-	printf("주사위 눈이 3 이상이면 냄비 쪽으로 이동합니다.\n");
-	printf("주사위를 굴립니다. 또르륵...\n");
-	printf("%d이(가) 나왔습니다!\n", dice);
-	
-	if (dice >= (6 - level)) {
-		if (*cat < ROOM_WIDTH - 2) {
-			(*cat)++;
-			printf("냄비 쪽으로 움직입니다.\n");
+void moveCat(char name[], int* cat, int mood) {//2-3 기분에 따라 이동하는 경우 생성
+	if (mood == 0) {
+		printf("기분이 매우 나쁜 %s은(는) 집으로 향합니다.\n", name);
+		if (*cat > HME_POS) {
+			(*cat)--;
+			printf("집 쪽으로 한 칸 이동했습니다.\n");
 		}
 		else {
-			printf("벽입니다.\n");
+			printf("이미 집에 도착해 제자리에 있습니다.\n");
 		}
 	}
-	else {
-		if (*cat > 1) {
-			(*cat)--;
-			printf("집 쪽으로 움직입니다.\n");
+	else if (mood == 1) {
+		if (towerPos == -1 && scratcherPos == -1) {
+			printf("놀 거리가 없어서 %s의 기분이 매우 나빠집니다: 1 -> 0\n", name);
 		}
 		else {
-			printf("벽입니다.\n");
+			int targetPos;
+			const char* targetName;
+
+			if (towerPos != -1 && scratcherPos != -1) {
+				int d1 = abs(*cat - towerPos);
+				int d2 = abs(*cat - scratcherPos);
+				if (d1 <= d2) {
+					targetPos = towerPos;
+					targetName = "캣타워";
+				}
+				else {
+					targetPos = scratcherPos;
+					targetName = "스크래처";
+				}
+			}
+			else if (towerPos != -1) {
+				targetPos = towerPos;
+				targetName = "캣타워";
+			}
+			else {
+				targetPos = scratcherPos;
+				targetName = "스크래처";
+			}
+
+			printf("%s은(는) 심심해서 %s 쪽으로 이동합니다.\n", name, targetName);
+
+			if (*cat < targetPos) (*cat)++;
+			else if (*cat > targetPos) (*cat)--;
+			else printf("이미 %s에 도착해 제자리에 있습니다.\n", targetName);
+		}
+	}
+	else if (mood == 2) {
+		printf("%s은(는) 기분 좋게 식빵을 굽고 있습니다.\n", name);
+	}
+	else if (mood == 3) {
+		printf("%s은(는) 골골송을 부르며 수프를 만들러 갑니다.\n", name);
+		if (*cat < BWL_POS) {
+			(*cat)++;
+			printf("냄비 쪽으로 한 칸 이동했습니다.\n");
+		}
+		else {
+			printf("이미 냄비에 도착해 제자리에 있습니다.\n");
 		}
 	}
 
 	Sleep(500);
 }
+
 
 void action(char name[], int cat, int* soup) {
 	if (cat == HME_POS) {
