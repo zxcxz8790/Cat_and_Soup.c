@@ -9,7 +9,7 @@
 #define BWL_POS (ROOM_WIDTH - 2)
 
 void printStatus(int soupCount, int level, int cp, char name[], int mood);//상태출력
-void interaction(char name[], int* level);//상호작용
+void interaction(char name[], int* level, int* mood, int hasMouse, int hasLaser);//2-5 상호작용 옵션 추가
 void room(int cat,int previous);//방그리기
 void moveCat(char name[], int* cat, int mood);//2-3 이동v2
 void action(char name[], int cat, int previous, int* soup, int* mood);//2-4 기분 증가 행동
@@ -20,6 +20,8 @@ int towerPos = -1, scratcherPos = -1; //2-1 방그리기 현재 위치 미정
 int main(void) {
 	srand((unsigned int)time(NULL));
 	char name[20];
+
+	int hasMouse = 0, hasLaser = 0;
 
 	printf("****야옹이와 스프****\n");
 
@@ -49,7 +51,7 @@ int main(void) {
 
 	while (1) {
 		badMood(name, level, &mood);
-		interaction(name, &level);
+		interaction(name, &level, &mood, hasMouse, hasLaser);
 		previous = cat;
 		moveCat(name, &cat, mood);
 		if (mood == 1 && towerPos == -1 && scratcherPos == -1) mood = 0;
@@ -93,51 +95,51 @@ void printStatus(int soupCount, int level, int cp, char name[], int mood) {//2-1
 	Sleep(500);
 }
 
-void interaction(char name[], int* level) {
+void interaction(char name[], int* level, int* mood, int hasMouse, int hasLaser) {//2-5 상호작용 옵션 추가
 	int choice;
-	printf("\n어떤 상호작용을 하시겠습니까?  0. 아무것도 하지 않음 1. 긁어주기\n");
-	while (1) {
-		printf(">>");
-		scanf_s("%d", &choice);
+	int maxOption = 1;
+	int laserOption = -1, mouseOption = -1;
 
-		if (choice == 0 || choice == 1) break;
+	printf("\n어떤 상호작용을 하시겠습니까?\n");
+	printf("0. 아무것도 하지 않음\n");
+	printf("1. 긁어주기\n");
+
+	int nextOption = 2;
+
+	if (hasMouse) {
+		printf("%d. 장난감 쥐로 놀아주기\n", nextOption);
+		mouseOption = nextOption++;
 	}
 
-	int dice = rand() % 6 + 1;
+	if (hasLaser) {
+		printf("%d. 레이저 포인터로 놀아주기\n", nextOption);
+		laserOption = nextOption++;
+	}
+
+	maxOption = nextOption - 1;
+
+	while (1) {
+		printf(">> ");
+		scanf_s("%d", &choice);
+		if (choice >= 0 && choice <= maxOption) break;
+	}
 
 	if (choice == 0) {
 		printf("아무것도 하지 않습니다.\n");
-		printf("4/6의 확률로 친밀도가 떨어집니다.\n");
-		printf("주사위를 굴립니다. 또르륵...\n");
-		printf("%d이(가) 나왔습니다!\n", dice);
-
-		if (dice <= 4 && *level > 0) {
-			(*level)--;
-			printf("친밀도가 떨어집니다.\n");
-		}
-		else {
-			printf("다행히 친밀도가 떨어지지 않았습니다.\n");
-		}
 	}
 	else if (choice == 1) {
 		printf("%s의 턱을 긁어주었습니다.\n", name);
-		printf("2/6의 확률로 친밀도가 높아집니다.\n");
-		printf("주사위를 굴립니다. 또르륵...\n");
-		printf("%d이(가) 나왔습니다!\n", dice);
-
-		if (dice >= 5 && *level < 4) {
-			(*level)++;
-			printf("친밀도가 높아집니다.\n");
-		}
-		else {
-			printf("친밀도는 그대로입니다.\n");
-		}
 	}
-	printf("현재 친밀도 : %d\n", *level);
-	printf("\n");
+	else if (choice == mouseOption) {
+		printf("장난감 쥐로 %s와 놀아주었습니다.\n", name);
+	}
+	else if (choice == laserOption) {
+		printf("레이저 포인터로 %s와 놀아주었습니다.\n", name);
+	}
 
-	Sleep(500);
+	Sleep(1000);
 }
+
 
 void room(int cat, int previous) {
 	int tower = 0, scratcher = 0; //2-1 방그리기 가구 놀이기구 미구매 상태
