@@ -14,6 +14,9 @@ void room(int cat,int previous);//방그리기
 void moveCat(char name[], int* cat, int mood);//2-3 이동v2
 void action(char name[], int cat, int previous, int* soup, int* mood);//2-4 기분 증가 행동
 void badMood(char name[], int level, int* mood);//2-2 기분 나빠짐
+void store(int* cp, int* hasMouse, int* hasLaser);//2-8 상점
+void setScratcherPosition();//2-8 수정된 스크래쳐 위치 설정
+void setTowerPosition();//2-8 수정된 타워 위치 설정
 
 int towerPos = -1, scratcherPos = -1; //2-1 방그리기 현재 위치 미정
 
@@ -62,6 +65,9 @@ int main(void) {
 		cp += cp_add;
 		printf("%s의 기분과 친밀도에 따라 CP가 %d 포인트 생산되었습니다.\n", name, cp_add);
 		printf("보유 CP: %d 포인트\n", cp);
+		Sleep(1000);
+		
+		store(&cp, &hasMouse, &hasLaser);
 
 		Sleep(2500);
 		system("cls");
@@ -212,8 +218,6 @@ void interaction(char name[], int* level, int* mood, int hasMouse, int hasLaser)
 
 
 void room(int cat, int previous) {
-	int tower = 0, scratcher = 0; //2-1 방그리기 가구 놀이기구 미구매 상태
-
 	for (int i = 0; i < ROOM_WIDTH; i++) {
 		printf("#");
 	}
@@ -223,8 +227,8 @@ void room(int cat, int previous) {
 	for (int i = 1; i < ROOM_WIDTH-1; i++) {
 		if (i == HME_POS) printf("H");
 		else if (i == BWL_POS) printf("B");
-		else if (tower && i == towerPos) printf("T"); //캣타워 출력, 현재는 미반영
-		else if (scratcher && i == scratcherPos) printf("S");// 스크래쳐 출력, 현재는 미반영
+		else if (towerPos != -1 && i == towerPos) printf("T");//2-8 수정된 타워 출력
+		else if (scratcherPos != -1 && i == scratcherPos) printf("S");//2-8 수정된 스크래쳐 출력
 		else printf(" ");
 	}
 	printf("#\n");
@@ -355,15 +359,19 @@ void action(char name[], int cat, int previous, int* soup, int* mood) { //2-4 위
 	Sleep(1000);
 }
 
-
-void FurniturePosition() {//2-1 방그리기 위치 무작위 설정
-	do {
-		towerPos = rand() % (ROOM_WIDTH - 2) + 1;
-	} while (towerPos == HME_POS || towerPos == BWL_POS);
-
+//2-1 가구 배치, 2-8 상점 기능에 맞춰 품목마다 개별적으로 적용되도록 수정
+void setScratcherPosition() {
+	scratcherPos = -1;
 	do {
 		scratcherPos = rand() % (ROOM_WIDTH - 2) + 1;
 	} while (scratcherPos == HME_POS || scratcherPos == BWL_POS || scratcherPos == towerPos);
+}
+
+void setTowerPosition() {
+	towerPos = -1;
+	do {
+		towerPos = rand() % (ROOM_WIDTH - 2) + 1;
+	} while (towerPos == HME_POS || towerPos == BWL_POS || towerPos == scratcherPos);
 }
 
 void badMood(char name[],int level, int *mood){//2-2 기분 나빠짐
@@ -387,6 +395,98 @@ void badMood(char name[],int level, int *mood){//2-2 기분 나빠짐
 	}
 	else {
 		printf("기분은 그대로입니다.\n");
+	}
+
+	Sleep(1000);
+}
+
+void store(int* cp, int* hasMouse, int* hasLaser) {//2-8 상점
+	static int hasScratcher = 0, hasTower = 0;
+
+	printf("\n상점에서 물건을 살 수 있습니다.\n");
+	printf("보유 CP: %d 포인트\n", *cp);
+	printf("어떤 물건을 구매할까요?\n");
+	printf("0. 아무 것도 사지 않는다\n");
+	printf("1. 장난감 쥐: 1 CP %s\n", *hasMouse ? "(품절)" : "");
+	printf("2. 레이저 포인터: 2 CP %s\n", *hasLaser ? "(품절)" : "");
+	printf("3. 스크래처: 4 CP %s\n", hasScratcher ? "(품절)" : "");
+	printf("4. 캣 타워: 6 CP %s\n", hasTower ? "(품절)" : "");
+
+	int choice;
+
+	while (1) {
+		printf(">> ");
+		scanf_s("%d", &choice);
+
+		if (choice == 0) {
+			printf("아무 것도 구매하지 않았습니다.\n");
+			break;
+		}
+
+		else if (choice == 1) {
+			if (*hasMouse) {
+				printf("이미 구매했습니다.\n");
+			}
+			else if (*cp >= 1) {
+				*hasMouse = 1;
+				*cp -= 1;
+				printf("장난감 쥐를 구매했습니다. 남은 CP: %d\n", *cp);
+				break;
+			}
+			else {
+				printf("CP가 부족합니다.\n");
+			}
+		}
+
+		else if (choice == 2) {
+			if (*hasLaser) {
+				printf("이미 구매했습니다.\n");
+			}
+			else if (*cp >= 2) {
+				*hasLaser = 1;
+				*cp -= 2;
+				printf("레이저 포인터를 구매했습니다. 남은 CP: %d\n", *cp);
+				break;
+			}
+			else {
+				printf("CP가 부족합니다.\n");
+			}
+		}
+
+		else if (choice == 3) {
+			if (hasScratcher) {
+				printf("이미 구매했습니다.\n");
+			}
+			else if (*cp >= 4) {
+				hasScratcher = 1;
+				*cp -= 4;
+				setScratcherPosition();
+				printf("스크래처를 구매했습니다. 남은 CP: %d\n", *cp);
+				break;
+			}
+			else {
+				printf("CP가 부족합니다.\n");
+			}
+		}
+
+		else if (choice == 4) {
+			if (hasTower) {
+				printf("이미 구매했습니다.\n");
+			}
+			else if (*cp >= 6) {
+				hasTower = 1;
+				*cp -= 6;
+				setTowerPosition();
+				printf("캣 타워를 구매했습니다. 남은 CP: %d\n", *cp);
+				break;
+			}
+			else {
+				printf("CP가 부족합니다.\n");
+			}
+		}
+		else {
+			printf("");
+		}
 	}
 
 	Sleep(1000);
