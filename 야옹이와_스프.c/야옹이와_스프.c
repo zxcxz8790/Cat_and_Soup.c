@@ -58,6 +58,11 @@ int main(void) {
 		room(cat, previous);
 		action(name, cat, previous, &soup, &mood);
 
+		int cp_add = (mood > 1 ? mood - 1 : 0) + level;//2-7 CP 생산
+		cp += cp_add;
+		printf("%s의 기분과 친밀도에 따라 CP가 %d 포인트 생산되었습니다.\n", name, cp_add);
+		printf("보유 CP: %d 포인트\n", cp);
+
 		Sleep(2500);
 		system("cls");
 		printStatus(soup, level, cp, name, mood);
@@ -88,7 +93,7 @@ void printStatus(int soupCount, int level, int cp, char name[], int mood) {//2-1
 	printf("CP : %d 포인트\n", cp);
 	printf("%s 의 기분 (0~3) : %d\n", name, mood);
 	printf("\t%s\n",moodMessages[mood]);
-	printf("집사와의 관계(0~4): %d\n", level);
+	printf("집사와의 친밀도(0~4): %d\n", level);
 	printf("\t%s\n", levelMessages[level]);
 	printf("=========================================\n");
 	
