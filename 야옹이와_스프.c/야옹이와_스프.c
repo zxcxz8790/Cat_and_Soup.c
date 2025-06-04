@@ -12,7 +12,7 @@ void printStatus(int soupCount, int level, int cp, char name[], int mood);//상태
 void interaction(char name[], int* level);//상호작용
 void room(int cat,int previous);//방그리기
 void moveCat(char name[], int* cat, int mood);//2-3 이동v2
-void action(char name[], int cat, int* soup);//행동
+void action(char name[], int cat, int previous, int* soup, int* mood);//2-4 기분 증가 행동
 void badMood(char name[], int level, int* mood);//2-2 기분 나빠짐
 
 int towerPos = -1, scratcherPos = -1; //2-1 방그리기 현재 위치 미정
@@ -54,7 +54,7 @@ int main(void) {
 		moveCat(name, &cat, mood);
 		if (mood == 1 && towerPos == -1 && scratcherPos == -1) mood = 0;
 		room(cat, previous);
-		action(name, cat, &soup);
+		action(name, cat, previous, &soup, &mood);
 
 		Sleep(2500);
 		system("cls");
@@ -238,29 +238,51 @@ void moveCat(char name[], int* cat, int mood) {//2-3 기분에 따라 이동하는 경우 �
 }
 
 
-void action(char name[], int cat, int* soup) {
-	if (cat == HME_POS) {
-		printf("%s(은)는 자신의 집에서 편안함을 느낍니다.\n", name);
+void action(char name[], int cat, int previous, int* soup, int* mood) { //2-4 위치별 기분 증가
+	if (cat == HME_POS && previous == HME_POS) {
+		if (*mood < 3) {
+			printf("%s(은)는 집에서 편안히 쉬며 기분이 좋아집니다: %d -> %d\n", name, *mood, *mood + 1);
+			(*mood)++;
+		}
+		else {
+			printf("%s(은)는 집에서 편안히 쉬고 있습니다.\n", name);
+		}
 	}
 	else if (cat == BWL_POS) {
 		int soupnum = rand() % 3;
 
 		printf("%s(이)가 ", name);
 		switch (soupnum) {
-		case 0:
-			printf("감자 수프"); break;
-		case 1:
-			printf("양송이 수프"); break;
-		case 2:
-			printf("브로콜리 수프"); break;
+		case 0: printf("감자 수프"); break;
+		case 1: printf("양송이 수프"); break;
+		case 2: printf("브로콜리 수프"); break;
 		}
-		
 		printf("를 만들었습니다!\n");
 		(*soup)++;
 	}
+	else if (cat == scratcherPos && scratcherPos != -1) {
+		if (*mood < 3) {
+			printf("%s(은)는 스크래처를 긁고 놀았습니다. 기분이 조금 좋아졌습니다: %d -> %d\n", name, *mood, *mood + 1);
+			(*mood)++;
+		}
+		else {
+			printf("%s(은)는 스크래처를 긁지만 이미 매우 기분이 좋습니다.\n", name);
+		}
+	}
+	else if (cat == towerPos && towerPos != -1) {
+		int increase = (*mood <= 1) ? 2 : (3 - *mood);
+		if (increase > 0) {
+			printf("%s(은)는 캣타워를 뛰어다닙니다. 기분이 제법 좋아졌습니다: %d -> %d\n", name, *mood, *mood + increase);
+			(*mood) += increase;
+		}
+		else {
+			printf("%s(은)는 캣타워에서 즐겁게 놀고 있습니다.\n", name);
+		}
+	}
 
-	Sleep(500);
+	Sleep(1000);
 }
+
 
 void FurniturePosition() {//2-1 방그리기 위치 무작위 설정
 	do {
